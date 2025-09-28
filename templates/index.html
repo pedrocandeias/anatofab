@@ -1,0 +1,411 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Orthopedic Hand Cuff Generator</title>
+    <style>
+      body { font-family: system-ui, Arial, sans-serif; margin: 2rem; color: #1a1a1a; }
+      h1 { margin-bottom: 0.5rem; }
+      .container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+      form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1rem; align-items: baseline; }
+      label { font-weight: 600; }
+      input[type="number"], input[type="text"] { width: 100%; padding: 0.4rem; border: 1px solid #ccc; border-radius: 6px; }
+      .full { grid-column: 1 / -1; }
+      .actions { display: flex; gap: 0.75rem; }
+      button { background: #0a7cff; color: white; border: 0; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; }
+      a.button { text-decoration: none; background: #ececec; color: #222; padding: 0.6rem 1rem; border-radius: 8px; }
+      .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 1rem; background: #fafafa; }
+      .hint { color: #666; font-size: 0.9rem; }
+      @media (max-width: 900px) { .container { grid-template-columns: 1fr; } form { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1>Orthopedic Hand Models</h1>
+    <p class="hint">Adjust parameters to generate 3D-printable STL models. Preview renders in-browser; downloads save to history.</p>
+
+    <div class="container">
+      <div class="card">
+        <div class="tabs">
+          <button type="button" class="tabbtn" data-tab="cuff">Wrist Cuff</button>
+          <button type="button" class="tabbtn" data-tab="finger">Finger Splint</button>
+          <button type="button" class="tabbtn" data-tab="palm">Palm</button>
+          <button type="button" class="tabbtn" data-tab="gauntlet">Gauntlet</button>
+          <button type="button" class="tabbtn" data-tab="pins">Pins</button>
+          <button type="button" class="tabbtn" data-tab="tensioner">3-Pin Tensioner</button>
+          <button type="button" class="tabbtn" data-tab="prox_finger">Proximal Finger</button>
+          <button type="button" class="tabbtn" data-tab="prox_thumb">Proximal Thumb</button>
+          <button type="button" class="tabbtn" data-tab="fingertip">Finger Tip</button>
+          <button type="button" class="tabbtn" data-tab="all">All Parts</button>
+        </div>
+        <form id="form-cuff" class="tab" data-part="cuff" action="/generate" method="post">
+          <input type="hidden" name="part" value="cuff" />
+          <label for="name">Design Name</label>
+          <input id="name" name="name" type="text" value="{{ defaults.cuff.name }}" />
+
+          <label for="inner_radius_mm">Inner Radius (mm)</label>
+          <input id="inner_radius_mm" name="inner_radius_mm" type="number" step="0.1" value="{{ defaults.cuff.inner_radius_mm }}" />
+
+          <label for="length_mm">Length (mm)</label>
+          <input id="length_mm" name="length_mm" type="number" step="0.1" value="{{ defaults.cuff.length_mm }}" />
+
+          <label for="arc_deg">Wrap Angle (deg)</label>
+          <input id="arc_deg" name="arc_deg" type="number" step="1" min="30" max="330" value="{{ defaults.cuff.arc_deg }}" />
+
+          <label for="thickness_mm">Thickness (mm)</label>
+          <input id="thickness_mm" name="thickness_mm" type="number" step="0.1" min="1" max="10" value="{{ defaults.cuff.thickness_mm }}" />
+
+          <label for="grid_u">Segments Along Length</label>
+          <input id="grid_u" name="grid_u" type="number" step="1" min="6" max="200" value="{{ defaults.cuff.grid_u }}" />
+
+          <label for="grid_v">Segments Around Arc</label>
+          <input id="grid_v" name="grid_v" type="number" step="1" min="6" max="300" value="{{ defaults.cuff.grid_v }}" />
+
+          <label for="hole_every_n">Hole Period (cells)</label>
+          <input id="hole_every_n" name="hole_every_n" type="number" step="1" min="0" max="50" value="{{ defaults.cuff.hole_every_n }}" />
+
+          <label for="hole_size_cells">Hole Size (cells)</label>
+          <input id="hole_size_cells" name="hole_size_cells" type="number" step="1" min="0" max="10" value="{{ defaults.cuff.hole_size_cells }}" />
+
+          <label for="taper_ratio">Taper (0-0.9)</label>
+          <input id="taper_ratio" name="taper_ratio" type="number" step="0.05" min="0" max="0.9" value="{{ defaults.cuff.taper_ratio }}" />
+
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="cuff">Preview</button>
+            <button type="button" data-export-step="cuff">Export STEP</button>
+            <a class="button" href="/history">View History</a>
+          </div>
+        </form>
+
+        <form id="form-finger" class="tab" data-part="finger" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="finger" />
+          <label for="name_f">Design Name</label>
+          <input id="name_f" name="name" type="text" value="{{ defaults.finger.name }}" />
+
+          <label for="inner_radius_mm_f">Inner Radius (mm)</label>
+          <input id="inner_radius_mm_f" name="inner_radius_mm" type="number" step="0.1" value="{{ defaults.finger.inner_radius_mm }}" />
+
+          <label for="length_mm_f">Length (mm)</label>
+          <input id="length_mm_f" name="length_mm" type="number" step="0.1" value="{{ defaults.finger.length_mm }}" />
+
+          <label for="arc_deg_f">Wrap Angle (deg)</label>
+          <input id="arc_deg_f" name="arc_deg" type="number" step="1" min="30" max="330" value="{{ defaults.finger.arc_deg }}" />
+
+          <label for="thickness_mm_f">Thickness (mm)</label>
+          <input id="thickness_mm_f" name="thickness_mm" type="number" step="0.1" min="1" max="10" value="{{ defaults.finger.thickness_mm }}" />
+
+          <label for="grid_u_f">Segments Along Length</label>
+          <input id="grid_u_f" name="grid_u" type="number" step="1" min="6" max="200" value="{{ defaults.finger.grid_u }}" />
+
+          <label for="grid_v_f">Segments Around Arc</label>
+          <input id="grid_v_f" name="grid_v" type="number" step="1" min="6" max="300" value="{{ defaults.finger.grid_v }}" />
+
+          <label for="hole_every_n_f">Hole Period (cells)</label>
+          <input id="hole_every_n_f" name="hole_every_n" type="number" step="1" min="0" max="50" value="{{ defaults.finger.hole_every_n }}" />
+
+          <label for="hole_size_cells_f">Hole Size (cells)</label>
+          <input id="hole_size_cells_f" name="hole_size_cells" type="number" step="1" min="0" max="10" value="{{ defaults.finger.hole_size_cells }}" />
+
+          <label for="taper_ratio_f">Taper (0-0.9)</label>
+          <input id="taper_ratio_f" name="taper_ratio" type="number" step="0.05" min="0" max="0.9" value="{{ defaults.finger.taper_ratio }}" />
+
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="finger">Preview</button>
+            <button type="button" data-export-step="finger">Export STEP</button>
+            <a class="button" href="/history">View History</a>
+          </div>
+        </form>
+
+        <!-- Palm -->
+        <form id="form-palm" class="tab" data-part="palm" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="palm" />
+          <label for="name_palm">Design Name</label>
+          <input id="name_palm" name="name" type="text" value="Palm" />
+          <label for="scale_palm">Scale</label>
+          <input id="scale_palm" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="palm">Preview</button>
+            <button type="button" data-export-step="palm">Export STEP</button>
+          </div>
+        </form>
+
+        <!-- Gauntlet -->
+        <form id="form-gauntlet" class="tab" data-part="gauntlet" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="gauntlet" />
+          <label for="name_gau">Design Name</label>
+          <input id="name_gau" name="name" type="text" value="Gauntlet" />
+          <label for="scale_gau">Scale</label>
+          <input id="scale_gau" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="gauntlet">Preview</button>
+            <button type="button" data-export-step="gauntlet">Export STEP</button>
+          </div>
+        </form>
+
+        <!-- Pins -->
+        <form id="form-pins" class="tab" data-part="pins" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="pins" />
+          <label for="name_pins">Design Name</label>
+          <input id="name_pins" name="name" type="text" value="Pins" />
+          <label for="scale_pins">Scale</label>
+          <input id="scale_pins" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="pins">Preview</button>
+            <button type="button" data-export-step="pins">Export STEP</button>
+          </div>
+        </form>
+
+        <!-- Three-pin tensioner -->
+        <form id="form-tensioner" class="tab" data-part="three_pin_tensioner" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="three_pin_tensioner" />
+          <label for="name_tens">Design Name</label>
+          <input id="name_tens" name="name" type="text" value="Three-Pin Tensioner" />
+          <label for="scale_tens">Scale</label>
+          <input id="scale_tens" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="three_pin_tensioner">Preview</button>
+            <button type="button" data-export-step="three_pin_tensioner">Export STEP</button>
+          </div>
+        </form>
+
+        <!-- Proximal finger -->
+        <form id="form-prox_finger" class="tab" data-part="proximal_finger" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="proximal_finger" />
+          <label for="name_pf">Design Name</label>
+          <input id="name_pf" name="name" type="text" value="Proximal Finger" />
+          <label for="scale_pf">Scale</label>
+          <input id="scale_pf" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="proximal_finger">Preview</button>
+            <button type="button" data-export-step="proximal_finger">Export STEP</button>
+          </div>
+        </form>
+
+        <!-- Proximal thumb -->
+        <form id="form-prox_thumb" class="tab" data-part="proximal_thumb" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="proximal_thumb" />
+          <label for="name_pt">Design Name</label>
+          <input id="name_pt" name="name" type="text" value="Proximal Thumb" />
+          <label for="scale_pt">Scale</label>
+          <input id="scale_pt" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="proximal_thumb">Preview</button>
+            <button type="button" data-export-step="proximal_thumb">Export STEP</button>
+          </div>
+        </form>
+
+        <!-- Finger tip -->
+        <form id="form-fingertip" class="tab" data-part="finger_tip" action="/generate" method="post" style="display:none">
+          <input type="hidden" name="part" value="finger_tip" />
+          <label for="name_ft">Design Name</label>
+          <input id="name_ft" name="name" type="text" value="Finger Tip" />
+          <label for="scale_ft">Scale</label>
+          <input id="scale_ft" name="scale" type="number" step="0.1" min="0.2" max="3" value="1.0" />
+          <div class="full actions">
+            <button type="submit">Generate STL</button>
+            <button type="button" data-preview="finger_tip">Preview</button>
+            <button type="button" data-export-step="finger_tip">Export STEP</button>
+          </div>
+        </form>
+
+        <div id="panel-all" class="tab" data-part="all" style="display:none">
+          <p>Preview all parts together and export a combined STEP.</p>
+          <div class="full actions">
+            <label for="handedness" style="font-weight:600; align-self:center">Hand</label>
+            <select id="handedness" style="padding:0.4rem; border:1px solid #ccc; border-radius:6px">
+              <option value="right" selected>Right</option>
+              <option value="left">Left</option>
+            </select>
+            <button type="button" data-preview="all">Preview All</button>
+            <button type="button" data-export-step="all">Export STEP (All)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Preview</h3>
+        <canvas id="preview" width="500" height="380" style="width:100%; height:380px; border:1px solid #ddd; border-radius:8px; background:#fff"></canvas>
+        <p class="hint">Click-drag to rotate. Mouse wheel to zoom.</p>
+
+        <h3>Notes</h3>
+        <ul>
+          <li>Wrap Angle controls how much of the circumference the cuff covers.</li>
+          <li>Increase Segments for smoother curves at higher print quality.</li>
+          <li>Set Hole Period to 0 for a solid cuff without perforations.</li>
+          <li>Typical wrist inner radius is 35–45 mm; measure the patient.</li>
+        </ul>
+        <p class="hint">Exported as ASCII STL ready for slicing.</p>
+        <p class="hint">STEP export requires additional CAD kernel; we can add it if desired.</p>
+      </div>
+    </div>
+    <script>
+      // --- Tabs ---
+      const tabs = document.querySelectorAll('.tabbtn');
+      const forms = {
+        cuff: document.getElementById('form-cuff'),
+        finger: document.getElementById('form-finger'),
+        palm: document.getElementById('form-palm'),
+        gauntlet: document.getElementById('form-gauntlet'),
+        pins: document.getElementById('form-pins'),
+        three_pin_tensioner: document.getElementById('form-tensioner'),
+        proximal_finger: document.getElementById('form-prox_finger'),
+        proximal_thumb: document.getElementById('form-prox_thumb'),
+        finger_tip: document.getElementById('form-fingertip')
+      };
+      const panelAll = document.getElementById('panel-all');
+      let active = 'cuff';
+      tabs.forEach(b => b.addEventListener('click', () => {
+        active = b.dataset.tab;
+        Object.entries(forms).forEach(([k, el]) => el.style.display = (k === active ? '' : 'none'));
+        panelAll.style.display = (active === 'all' ? '' : 'none');
+      }));
+
+      // --- STL Preview: simple ASCII STL parser + painter ---
+      const canvas = document.getElementById('preview');
+      const ctx = canvas.getContext('2d');
+      let tris = [], angleX = 0.5, angleY = -0.6, scale = 2.0, offsetZ = 0;
+
+      function parseASCIIStl(txt){
+        const lines = txt.split(/\n+/); const verts=[]; const out=[]; let tri=[];
+        for(let i=0;i<lines.length;i++){
+          const L=lines[i].trim();
+          if(L.startsWith('vertex')){
+            const parts=L.split(/\s+/);
+            verts.push([parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3])]);
+            tri.push(verts[verts.length-1]);
+            if(tri.length===3){ out.push(tri); tri=[]; }
+          }
+        }
+        return out;
+      }
+
+      function matMul(a,b){ const r=[0,0,0]; r[0]=a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; r[1]=a[0]*b[3]+a[1]*b[4]+a[2]*b[5]; r[2]=a[0]*b[6]+a[1]*b[7]+a[2]*b[8]; return r; }
+      function rotMat(ax, ay){
+        const cx=Math.cos(ax), sx=Math.sin(ax), cy=Math.cos(ay), sy=Math.sin(ay);
+        // R = Ry * Rx
+        return [
+          cy, sy*sx, sy*cx,
+          0,  cx,   -sx,
+          -sy, cy*sx, cy*cx
+        ];
+      }
+
+      function project(p){ const f=scale; return [canvas.width/2 + f*p[0], canvas.height/2 - f*p[1]]; }
+
+      function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(tris.length===0){ ctx.fillStyle='#888'; ctx.fillText('No preview yet', 20, 24); return; }
+        const R=rotMat(angleX, angleY);
+        const zlist=[];
+        for(const t of tris){
+          const v = t.map(p=>{ const pr=matMul(p, R); return [pr[0], pr[1], pr[2]+offsetZ]; });
+          const z = (v[0][2]+v[1][2]+v[2][2])/3;
+          zlist.push([z, v]);
+        }
+        zlist.sort((a,b)=>a[0]-b[0]);
+        for(const [,v] of zlist){
+          ctx.beginPath(); const p0=project(v[0]); ctx.moveTo(p0[0], p0[1]);
+          const p1=project(v[1]); ctx.lineTo(p1[0], p1[1]);
+          const p2=project(v[2]); ctx.lineTo(p2[0], p2[1]); ctx.closePath();
+          // simple shading based on normal z
+          const ux=v[1][0]-v[0][0], uy=v[1][1]-v[0][1], uz=v[1][2]-v[0][2];
+          const vx=v[2][0]-v[0][0], vy=v[2][1]-v[0][1], vz=v[2][2]-v[0][2];
+          const nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx; const nl=Math.sqrt(nx*nx+ny*ny+nz*nz)||1; const nzr= Math.abs(nz/nl);
+          const shade = 200 - Math.floor(120*nzr);
+          ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+          ctx.fill();
+          ctx.strokeStyle = '#ddd';
+          ctx.stroke();
+        }
+      }
+
+      let dragging=false, lastX=0, lastY=0;
+      canvas.addEventListener('mousedown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; });
+      window.addEventListener('mouseup', ()=> dragging=false);
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return; const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY; angleY += dx*0.01; angleX += dy*0.01; draw();
+      });
+      canvas.addEventListener('wheel', e=>{ e.preventDefault(); const s = Math.exp(-e.deltaY*0.001); scale *= s; draw(); }, { passive:false });
+
+      function buildPrefixedParams(prefix, form){
+        const data = new FormData(form);
+        const out = new URLSearchParams();
+        for(const [k,v] of data.entries()){
+          out.append(`${prefix}.${k}`, v);
+        }
+        return out;
+      }
+
+      async function fetchPreview(part){
+        let url = '';
+        if(part==='all'){
+          const qs = new URLSearchParams();
+          for(const [key, form] of Object.entries(forms)){
+            const pref = key;
+            const p = buildPrefixedParams(pref, form);
+            p.forEach((v,k)=>qs.append(k,v));
+          }
+          const hand = document.getElementById('handedness').value || 'right';
+          url = `/stl_all?preview=1&hand=${encodeURIComponent(hand)}&${qs.toString()}`;
+        } else {
+          const form = forms[part] || (part==='finger' ? forms.finger : forms.cuff);
+          if(!form){ return; }
+          const data = new FormData(form);
+          data.append('part', part);
+          const qs = new URLSearchParams(data).toString();
+          url = `/stl?preview=1&${qs}`;
+        }
+        const res = await fetch(url);
+        if(!res.ok){ return; }
+        const txt = await res.text();
+        tris = parseASCIIStl(txt);
+        // Auto-scale to fit view
+        if(tris.length>0){
+          let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,minZ=1e9,maxZ=-1e9;
+          for(const t of tris){ for(const p of t){ minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]); minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]); minZ=Math.min(minZ,p[2]); maxZ=Math.max(maxZ,p[2]); }}
+          const size = Math.max(maxX-minX, maxY-minY, maxZ-minZ) || 1;
+          scale = 320/size; offsetZ = - (minZ+maxZ)/2; angleX=0.5; angleY=-0.6;
+        }
+        draw();
+      }
+
+      document.querySelectorAll('button[data-preview]')
+        .forEach(b=> b.addEventListener('click', ()=> fetchPreview(b.dataset.preview)) );
+
+      // STEP export buttons
+      function goExportSTEP(part){
+        if(part==='all'){
+          const qs = new URLSearchParams();
+          qs.set('all','1');
+          const hand = document.getElementById('handedness').value || 'right';
+          qs.set('hand', hand);
+          for(const [key, form] of Object.entries(forms)){
+            const pref = key;
+            const p = buildPrefixedParams(pref, form);
+            p.forEach((v,k)=>qs.append(k,v));
+          }
+          window.location.href = `/export_step?${qs.toString()}`;
+        } else {
+          const form = forms[part] || (part==='finger' ? forms.finger : forms.cuff);
+          const data = new FormData(form);
+          data.append('part', part);
+          const qs = new URLSearchParams(data).toString();
+          window.location.href = `/export_step?${qs}`;
+        }
+      }
+      document.querySelectorAll('button[data-export-step]')
+        .forEach(b=> b.addEventListener('click', ()=> goExportSTEP(b.dataset.exportStep)) );
+
+      // initial render placeholder
+      draw();
+    </script>
+  </body>
+  </html>

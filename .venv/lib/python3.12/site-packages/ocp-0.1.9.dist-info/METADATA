@@ -1,0 +1,22 @@
+Metadata-Version: 2.1
+Name: ocp
+Version: 0.1.9
+Summary: Open Collaboration Platform meta package
+Home-page: https://github.com/OpenCollaborationPlatform
+Download-URL: https://github.com/OpenCollaborationPlatform/PythonOCP
+Author: Stefan Tröger
+Author-email: stefantroeger@gmx.net
+Maintainer: Stefan Tröger
+Maintainer-email: stefantroeger@gmx.net
+License: LGPL2.1+
+Platform: any
+License-File: LICENSE
+Requires-Dist: ocp-darwin-arm64 (>=0.1.9) ; platform_system == "Darwin" and platform_machine == "aarch64"
+Requires-Dist: ocp-darwin-amd64 (>=0.1.9) ; platform_system == "Darwin" and platform_machine == "x86_64"
+Requires-Dist: ocp-linux-arm64 (>=0.1.9) ; platform_system == "Linux" and platform_machine == "aarch64"
+Requires-Dist: ocp-linux-arm (>=0.1.9) ; platform_system == "Linux" and platform_machine == "arm"
+Requires-Dist: ocp-linux-386 (>=0.1.9) ; platform_system == "Linux" and platform_machine == "i386"
+Requires-Dist: ocp-linux-amd64 (>=0.1.9) ; platform_system == "Linux" and platform_machine == "x86_64"
+Requires-Dist: ocp-windows-386 (>=0.1.9) ; platform_system == "Windows" and platform_machine == "386"
+Requires-Dist: ocp-windows-amd64 (>=0.1.9) ; platform_system == "Windows" and platform_machine == "AMD64"
+

@@ -1,0 +1,18 @@
+{
+  "placements": {
+    "palm": { "translate": [0, 0, 0], "rotate_deg_z": 0 },
+    "gauntlet": { "translate": [0, 0, -70], "rotate_deg_z": 0 },
+    "proximal_finger": { "copies": [
+      { "translate": [-22, 35, 10] },
+      { "translate": [-7, 35, 10] },
+      { "translate": [7, 35, 10] },
+      { "translate": [22, 35, 10] }
+    ]},
+    "proximal_thumb": { "translate": [-35, 15, 5], "rotate_deg_z": -20 },
+    "finger_tip": { "translate": [22, 55, 12] },
+    "pins": { "translate": [0, -35, 8] },
+    "three_pin_tensioner": { "translate": [0, -50, 8] }
+  },
+  "hand": "right"
+}
+

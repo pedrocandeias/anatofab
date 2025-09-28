@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Generated Cuffs</title>
+    <style>
+      body { font-family: system-ui, Arial, sans-serif; margin: 2rem; color: #1a1a1a; }
+      a { color: #0a7cff; text-decoration: none; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; }
+      th { background: #fafafa; }
+      .pill { background: #eef5ff; color: #0a7cff; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Generated Cuffs</h1>
+    <p><a href="/">Back to generator</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>When (UTC)</th>
+          <th>Part</th>
+          <th>Name</th>
+          <th>Radius mm</th>
+          <th>Length mm</th>
+          <th>Angle deg</th>
+          <th>Thickness mm</th>
+          <th>Grid</th>
+          <th>Holes</th>
+          <th>STL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.created_at }}</td>
+          <td>{{ r.part or 'cuff' }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ '%.1f'|format(r.inner_radius_mm) }}</td>
+          <td>{{ '%.1f'|format(r.length_mm) }}</td>
+          <td>{{ '%.0f'|format(r.arc_deg) }}</td>
+          <td>{{ '%.1f'|format(r.thickness_mm) }}</td>
+          <td>{{ r.grid_u }}×{{ r.grid_v }}</td>
+          <td>{{ r.hole_every_n }} / {{ r.hole_size_cells }}</td>
+          <td><a class="pill" href="/download/{{ r.id }}">Download</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9">No items yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+  </html>

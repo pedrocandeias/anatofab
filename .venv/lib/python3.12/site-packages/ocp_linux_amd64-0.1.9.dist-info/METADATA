@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: ocp-linux-amd64
+Version: 0.1.9
+Summary: Open Collaboration Platform binary node package
+Home-page: https://github.com/OpenCollaborationPlatform
+Download-URL: https://github.com/OpenCollaborationPlatform/PythonOCP
+Author: Stefan Tröger
+Author-email: stefantroeger@gmx.net
+Maintainer: Stefan Tröger
+Maintainer-email: stefantroeger@gmx.net
+License: LGPL2.1+
+Platform: linux
+License-File: LICENSE
+
