@@ -1,4 +1,4 @@
-Orthopedic Hand/Wrist Generator (with Phoenix Hand import)
+Prosthetic Hand/Wrist Generator (with Phoenix Hand import)
 =========================================================
 
 This web app generates and assembles prosthetic hand parts. It supports:
