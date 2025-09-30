@@ -15,7 +15,7 @@
   </head>
   <body>
     <h1>Generated Cuffs</h1>
-    <p><a href="/">Back to generator</a></p>
+    <p><a href="{{ url_for('index') }}">Back to generator</a></p>
     <table>
       <thead>
         <tr>
@@ -43,7 +43,7 @@
           <td>{{ '%.1f'|format(r.thickness_mm) }}</td>
           <td>{{ r.grid_u }}×{{ r.grid_v }}</td>
           <td>{{ r.hole_every_n }} / {{ r.hole_size_cells }}</td>
-          <td><a class="pill" href="/download/{{ r.id }}">Download</a></td>
+          <td><a class="pill" href="{{ url_for('download', cfg_id=r.id) }}">Download</a></td>
         </tr>
         {% else %}
         <tr><td colspan="9">No items yet.</td></tr>

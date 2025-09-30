@@ -1,0 +1,6 @@
+Flask
+gunicorn
+
+# Optional for STEP export (choose one):
+# OCP
+# pythonocc-core

@@ -21,6 +21,10 @@
     </style>
   </head>
   <body>
+    <script>
+      // Base path for subpath deployments (e.g., /ipca/anatofab)
+      const BASE = {{ request.script_root|tojson|safe }} || '';
+    </script>
     <h1>Orthopedic Hand Models</h1>
     <p class="hint">Adjust parameters to generate 3D-printable STL models. Preview renders in-browser; downloads save to history.</p>
 
@@ -38,7 +42,7 @@
           <button type="button" class="tabbtn" data-tab="fingertip">Finger Tip</button>
           <button type="button" class="tabbtn" data-tab="all">All Parts</button>
         </div>
-        <form id="form-cuff" class="tab" data-part="cuff" action="/generate" method="post">
+        <form id="form-cuff" class="tab" data-part="cuff" action="{{ url_for('generate') }}" method="post">
           <input type="hidden" name="part" value="cuff" />
           <label for="name">Design Name</label>
           <input id="name" name="name" type="text" value="{{ defaults.cuff.name }}" />
@@ -74,11 +78,11 @@
             <button type="submit">Generate STL</button>
             <button type="button" data-preview="cuff">Preview</button>
             <button type="button" data-export-step="cuff">Export STEP</button>
-            <a class="button" href="/history">View History</a>
+            <a class="button" href="{{ url_for('history') }}">View History</a>
           </div>
         </form>
 
-        <form id="form-finger" class="tab" data-part="finger" action="/generate" method="post" style="display:none">
+        <form id="form-finger" class="tab" data-part="finger" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="finger" />
           <label for="name_f">Design Name</label>
           <input id="name_f" name="name" type="text" value="{{ defaults.finger.name }}" />
@@ -114,12 +118,12 @@
             <button type="submit">Generate STL</button>
             <button type="button" data-preview="finger">Preview</button>
             <button type="button" data-export-step="finger">Export STEP</button>
-            <a class="button" href="/history">View History</a>
+            <a class="button" href="{{ url_for('history') }}">View History</a>
           </div>
         </form>
 
         <!-- Palm -->
-        <form id="form-palm" class="tab" data-part="palm" action="/generate" method="post" style="display:none">
+        <form id="form-palm" class="tab" data-part="palm" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="palm" />
           <label for="name_palm">Design Name</label>
           <input id="name_palm" name="name" type="text" value="Palm" />
@@ -133,7 +137,7 @@
         </form>
 
         <!-- Gauntlet -->
-        <form id="form-gauntlet" class="tab" data-part="gauntlet" action="/generate" method="post" style="display:none">
+        <form id="form-gauntlet" class="tab" data-part="gauntlet" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="gauntlet" />
           <label for="name_gau">Design Name</label>
           <input id="name_gau" name="name" type="text" value="Gauntlet" />
@@ -147,7 +151,7 @@
         </form>
 
         <!-- Pins -->
-        <form id="form-pins" class="tab" data-part="pins" action="/generate" method="post" style="display:none">
+        <form id="form-pins" class="tab" data-part="pins" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="pins" />
           <label for="name_pins">Design Name</label>
           <input id="name_pins" name="name" type="text" value="Pins" />
@@ -161,7 +165,7 @@
         </form>
 
         <!-- Three-pin tensioner -->
-        <form id="form-tensioner" class="tab" data-part="three_pin_tensioner" action="/generate" method="post" style="display:none">
+        <form id="form-tensioner" class="tab" data-part="three_pin_tensioner" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="three_pin_tensioner" />
           <label for="name_tens">Design Name</label>
           <input id="name_tens" name="name" type="text" value="Three-Pin Tensioner" />
@@ -175,7 +179,7 @@
         </form>
 
         <!-- Proximal finger -->
-        <form id="form-prox_finger" class="tab" data-part="proximal_finger" action="/generate" method="post" style="display:none">
+        <form id="form-prox_finger" class="tab" data-part="proximal_finger" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="proximal_finger" />
           <label for="name_pf">Design Name</label>
           <input id="name_pf" name="name" type="text" value="Proximal Finger" />
@@ -189,7 +193,7 @@
         </form>
 
         <!-- Proximal thumb -->
-        <form id="form-prox_thumb" class="tab" data-part="proximal_thumb" action="/generate" method="post" style="display:none">
+        <form id="form-prox_thumb" class="tab" data-part="proximal_thumb" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="proximal_thumb" />
           <label for="name_pt">Design Name</label>
           <input id="name_pt" name="name" type="text" value="Proximal Thumb" />
@@ -203,7 +207,7 @@
         </form>
 
         <!-- Finger tip -->
-        <form id="form-fingertip" class="tab" data-part="finger_tip" action="/generate" method="post" style="display:none">
+        <form id="form-fingertip" class="tab" data-part="finger_tip" action="{{ url_for('generate') }}" method="post" style="display:none">
           <input type="hidden" name="part" value="finger_tip" />
           <label for="name_ft">Design Name</label>
           <input id="name_ft" name="name" type="text" value="Finger Tip" />
@@ -354,14 +358,14 @@
             p.forEach((v,k)=>qs.append(k,v));
           }
           const hand = document.getElementById('handedness').value || 'right';
-          url = `/stl_all?preview=1&hand=${encodeURIComponent(hand)}&${qs.toString()}`;
+          url = `${BASE}/stl_all?preview=1&hand=${encodeURIComponent(hand)}&${qs.toString()}`;
         } else {
           const form = forms[part] || (part==='finger' ? forms.finger : forms.cuff);
           if(!form){ return; }
           const data = new FormData(form);
           data.append('part', part);
           const qs = new URLSearchParams(data).toString();
-          url = `/stl?preview=1&${qs}`;
+          url = `${BASE}/stl?preview=1&${qs}`;
         }
         const res = await fetch(url);
         if(!res.ok){ return; }
@@ -392,13 +396,13 @@
             const p = buildPrefixedParams(pref, form);
             p.forEach((v,k)=>qs.append(k,v));
           }
-          window.location.href = `/export_step?${qs.toString()}`;
+          window.location.href = `${BASE}/export_step?${qs.toString()}`;
         } else {
           const form = forms[part] || (part==='finger' ? forms.finger : forms.cuff);
           const data = new FormData(form);
           data.append('part', part);
           const qs = new URLSearchParams(data).toString();
-          window.location.href = `/export_step?${qs}`;
+          window.location.href = `${BASE}/export_step?${qs}`;
         }
       }
       document.querySelectorAll('button[data-export-step]')
