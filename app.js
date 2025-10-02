@@ -437,6 +437,15 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
         console.warn(`Failed to load model file: ${url}`, e);
       }
     }
+    // Optional STL dependency if present
+    try {
+      const stlUrl = '/models/palm_left_v2_nobox.stl';
+      const res = await fetch(stlUrl);
+      if (res.ok) {
+        const buf = new Uint8Array(await res.arrayBuffer());
+        mod.FS.writeFile('models/palm_left_v2_nobox.stl', buf);
+      }
+    } catch (_) {}
     state.openscad.modelsLoaded = true;
   }
 
@@ -454,9 +463,20 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
       // Minimal fontconfig setup to avoid text() failures
       try { mod.FS.mkdir('/fonts'); } catch (_) {}
       try {
-        mod.FS.writeFile('/fonts/fonts.conf', String(
-          `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n</fontconfig>`
-        ));
+        const fc = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n  <dir>/fonts</dir>\n</fontconfig>`;
+        mod.FS.writeFile('/fonts/fonts.conf', fc);
+        // Try to load a font if app ships one
+        const fontPaths = ['/libs/LiberationSans-Regular.ttf', '/libs/DejaVuSans.ttf', '/models/LiberationSans-Regular.ttf'];
+        for (const fp of fontPaths) {
+          try {
+            const r = await fetch(fp);
+            if (!r.ok) continue;
+            const fontBuf = new Uint8Array(await r.arrayBuffer());
+            const base = fp.split('/').pop();
+            mod.FS.writeFile(`/fonts/${base}`, fontBuf);
+            break;
+          } catch (_) {}
+        }
       } catch (_) {}
       if (typeof mod.callMain === 'function') {
         const args = [inName, '--backend=manifold', '-o', outName];
