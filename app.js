@@ -22,6 +22,7 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
       unavailable: false,
       modelsLoaded: false,
     },
+    configOverrides: {},
   };
 
   function $(sel) {
@@ -346,14 +347,45 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
     state.openscad.loading = true;
     setStatus('Loading OpenSCAD WASM…');
     try {
-      // Try to load loader script dynamically if not present
+      // Try multiple common base paths for the loader produced by openscad-wasm
+      const bases = ['/libs/', 'libs/', '/libs/openscad/', 'libs/openscad/', '/libs/wasm/', 'libs/wasm/'];
+      let loaded = false;
+      let chosenBase = null;
       if (typeof window.OpenSCAD === 'undefined') {
-        await loadScript('/libs/openscad.js');
+        for (const base of bases) {
+          // Prefer dynamic import for ES module builds (uses import.meta)
+          try {
+            const ns = await import(base + 'openscad.js');
+            const factory = ns && (ns.default || ns.OpenSCAD);
+            if (typeof factory === 'function') {
+              window.OpenSCAD = factory; // expose for downstream usage
+              loaded = true;
+              chosenBase = base;
+              break;
+            }
+          } catch (e) {
+            // Fall through to classic script tag with type=module
+          }
+          try {
+            await loadScript(base + 'openscad.js', true);
+            if (typeof window.OpenSCAD !== 'undefined') {
+              loaded = true;
+              chosenBase = base;
+              break;
+            }
+          } catch (e) {
+            console.warn('OpenSCAD loader not at', base + 'openscad.js');
+          }
+        }
+      } else {
+        loaded = true;
+        chosenBase = 'libs/';
       }
-      if (typeof window.OpenSCAD === 'undefined') {
-        throw new Error('openscad.js loader not found in /libs');
+      if (!loaded || typeof window.OpenSCAD === 'undefined') {
+        throw new Error('openscad.js loader not found in any known path');
       }
-      const mod = await window.OpenSCAD({ locateFile: (p) => (p.endsWith('.wasm') ? 'libs/openscad.wasm' : p) });
+      const baseWasm = chosenBase || 'libs/';
+      const mod = await window.OpenSCAD({ locateFile: (p) => (p.endsWith('.wasm') ? baseWasm + 'openscad.wasm' : p), noInitialRun: true });
       state.openscad.module = mod;
       state.openscad.loaded = true;
       setStatus('OpenSCAD loaded.');
@@ -369,11 +401,12 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
     }
   }
 
-  function loadScript(src) {
+  function loadScript(src, asModule = false) {
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
       s.src = src;
       s.async = true;
+      if (asModule) s.type = 'module';
       s.onload = () => resolve();
       s.onerror = () => reject(new Error('Failed to load script: ' + src));
       document.head.appendChild(s);
@@ -384,6 +417,7 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
     if (state.openscad.modelsLoaded) return;
     try { mod.FS.mkdir('models'); } catch (_) {}
     const files = [
+      'hand_wrapper.scad',
       'pipe.scad',
       'segmented_pipe_tensor.scad',
       'fingerator.scad',
@@ -407,26 +441,48 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
   }
 
   async function compileSCADToSTL(scadSource) {
-    const mod = await ensureOpenSCADModule();
-    if (!mod) throw new Error('OpenSCAD module not loaded');
-    await ensureScadModels(mod);
-    const inName = 'model.scad';
-    const outName = 'model.stl';
-    try {
+    async function runOnce() {
+      const mod = await ensureOpenSCADModule();
+      if (!mod) throw new Error('OpenSCAD module not loaded');
+      await ensureScadModels(mod);
+      const inName = 'model.scad';
+      const outName = 'model.stl';
       // Clean previous files if exist
       try { mod.FS.unlink(inName); } catch (_) {}
       try { mod.FS.unlink(outName); } catch (_) {}
       mod.FS.writeFile(inName, scadSource);
+      // Minimal fontconfig setup to avoid text() failures
+      try { mod.FS.mkdir('/fonts'); } catch (_) {}
+      try {
+        mod.FS.writeFile('/fonts/fonts.conf', String(
+          `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n<fontconfig>\n</fontconfig>`
+        ));
+      } catch (_) {}
       if (typeof mod.callMain === 'function') {
-        mod.callMain(['-o', outName, inName]);
+        const args = [inName, '--backend=manifold', '-o', outName];
+        const code = mod.callMain(args);
+        if (code !== 0) throw new Error('OpenSCAD exited with code ' + code);
       } else if (typeof mod._main === 'function') {
-        // Fallback: some builds expose _main; cannot easily call with args in JS
-        // Try running via callMain if present; otherwise, throw
         throw new Error('OpenSCAD main entry not exposed');
       }
-      const out = mod.FS.readFile(outName); // Uint8Array
-      return out;
+      return mod.FS.readFile(outName);
+    }
+
+    try {
+      return await runOnce();
     } catch (e) {
+      const msg = String(e && (e.message || e)).toLowerCase();
+      if (msg.includes('program has already aborted')) {
+        // Recreate a fresh module and retry once
+        console.warn('OpenSCAD module aborted; reinitializing and retrying once…');
+        // Reset module state
+        state.openscad.loaded = false;
+        state.openscad.loading = false;
+        state.openscad.module = null;
+        state.openscad.unavailable = false;
+        state.openscad.modelsLoaded = false;
+        return await runOnce();
+      }
       console.error('OpenSCAD compile error:', e);
       throw e;
     }
@@ -438,12 +494,11 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
   }
 
   function buildPalmScadFromParameters(p) {
-    const overall_scale = ((Number(p.palm_width) || 70) / 56).toFixed(4);
+    const overall_scale = (Number.isFinite(p.overall_scale) ? p.overall_scale : 1.25).toFixed(4);
     const mirrored = !!p.mirrored;
-    const serial_line1 = scadStringLiteral(p.serial_line1, 'Pedro');
-    const serial_line2 = scadStringLiteral(p.serial_line2, 'TestHand');
-    const today = new Date().toISOString().slice(0, 10);
-    const serial_line3 = scadStringLiteral(p.serial_line3, today);
+    const serial_line1 = scadStringLiteral(p.serial_line1, '');
+    const serial_line2 = scadStringLiteral(p.serial_line2, '');
+    const serial_line3 = scadStringLiteral(p.serial_line3, '');
     const include_wrist_stamping_die = p.include_wrist_stamping_die !== undefined ? !!p.include_wrist_stamping_die : true;
     const pivot_size = (Number(p.pivot_size) || 1.5875);
     const pivot_extra_clearance = Number.isFinite(p.pivot_extra_clearance) ? p.pivot_extra_clearance : 0.0;
@@ -454,8 +509,27 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
     const string_channel_scale = Number.isFinite(p.string_channel_scale) ? p.string_channel_scale : 0.9;
     const elastic_channel_scale = Number.isFinite(p.elastic_channel_scale) ? p.elastic_channel_scale : 0.9;
     const old_style_wrist = p.old_style_wrist !== undefined ? !!p.old_style_wrist : false;
+    const thumb_length = Number.isFinite(p.thumb_length) ? p.thumb_length : 65;
+    const thumb_angle = Number.isFinite(p.thumb_angle) ? p.thumb_angle : 45;
+    const thumb_clearance = Number.isFinite(p.thumb_clearance) ? p.thumb_clearance : 0.5;
 
-    const header = `overall_scale = ${overall_scale};
+    // Fingerator parameters
+    const global_scale = Number.isFinite(p.global_scale) ? p.global_scale : Number(overall_scale);
+    const nominal_clearance = Number.isFinite(p.nominal_clearance) ? p.nominal_clearance : 0.5;
+    const bearing_pocket_diameter = Number.isFinite(p.bearing_pocket_diameter) ? p.bearing_pocket_diameter : 0;
+    const bearing_pocket_depth = Number.isFinite(p.bearing_pocket_depth) ? p.bearing_pocket_depth : 0.4;
+    const pin_index = Number.isFinite(p.pin_index) ? p.pin_index : 1;
+    const pin_diameter_clearance = Number.isFinite(p.pin_diameter_clearance) ? p.pin_diameter_clearance : 0;
+    const pins_for_string = p.pins_for_string !== undefined ? !!p.pins_for_string : false;
+    const print_finger_phalanx = p.print_finger_phalanx !== undefined ? !!p.print_finger_phalanx : true;
+    const print_long_fingers = p.print_long_fingers !== undefined ? !!p.print_long_fingers : true;
+    const print_short_fingers = p.print_short_fingers !== undefined ? !!p.print_short_fingers : true;
+    const print_thumb = p.print_thumb !== undefined ? !!p.print_thumb : true;
+    const print_thumb_phalanx = p.print_thumb_phalanx !== undefined ? !!p.print_thumb_phalanx : true;
+
+    const header = `include <models/hand_wrapper.scad>;
+
+overall_scale = ${overall_scale};
 mirrored = ${mirrored};
 serial_line1 = ${serial_line1};
 serial_line2 = ${serial_line2};
@@ -470,13 +544,25 @@ include_knuckle_covers = ${include_knuckle_covers};
 string_channel_scale = ${string_channel_scale};
 elastic_channel_scale = ${elastic_channel_scale};
 old_style_wrist = ${old_style_wrist};
+thumb_length = ${thumb_length};
+thumb_angle = ${thumb_angle};
+thumb_clearance = ${thumb_clearance};
 
-include <models/pipe.scad>;
-include <models/segmented_pipe_tensor.scad>;
-include <models/fingerator.scad>;
-include <models/paraglider_palm_left.scad>;
+// fingerator parameters
+global_scale = ${global_scale};
+nominal_clearance = ${nominal_clearance};
+bearing_pocket_diameter = ${bearing_pocket_diameter};
+bearing_pocket_depth = ${bearing_pocket_depth};
+pin_index = ${pin_index};
+pin_diameter_clearance = ${pin_diameter_clearance};
+pins_for_string = ${pins_for_string};
+print_finger_phalanx = ${print_finger_phalanx};
+print_long_fingers = ${print_long_fingers};
+print_short_fingers = ${print_short_fingers};
+print_thumb = ${print_thumb};
+print_thumb_phalanx = ${print_thumb_phalanx};
 
-scaled_palm();
+scaled_hand();
 `;
     return header;
   }
@@ -514,6 +600,12 @@ scaled_palm();
       })
       .catch((err) => {
         console.error('Compilation failed:', err);
+        try {
+          const msg = String(err && (err.message || err)).toLowerCase();
+          if (msg.includes('undefined') && msg.includes('fingerator')) {
+            console.error('fingerator() module missing from SCAD');
+          }
+        } catch (_) {}
         console.log('SCAD source used:\n' + scad);
         // Fallback: build a preview geometry so users still see updates
         const preview = buildPreviewGeometryFromParameters(parameters);
@@ -752,6 +844,10 @@ scaled_palm();
 
   // --- Wire UI ---
   function initUI() {
+    // Tabs
+    initTabs();
+
+    bindSliderValue('overall_scale', 'overall_scale_val');
     bindSliderValue('palm_width', 'palm_width_val');
     bindSliderValue('palm_length', 'palm_length_val');
     bindSliderValue('finger_length_index', 'finger_length_index_val');
@@ -759,6 +855,9 @@ scaled_palm();
     bindSliderValue('finger_length_ring', 'finger_length_ring_val');
     bindSliderValue('finger_length_pinky', 'finger_length_pinky_val');
     bindSliderValue('joint_clearance', 'joint_clearance_val');
+    bindSliderValue('thumb_length', 'thumb_length_val');
+    bindSliderValue('thumb_angle', 'thumb_angle_val');
+    bindSliderValue('thumb_clearance', 'thumb_clearance_val');
     bindSliderValue('pivot_extra_clearance', 'pivot_extra_clearance_val');
     bindSliderValue('string_channel_scale', 'string_channel_scale_val');
     bindSliderValue('elastic_channel_scale', 'elastic_channel_scale_val');
@@ -768,6 +867,25 @@ scaled_palm();
     $('#exportStepBtn').addEventListener('click', exportSTEP);
     $('#saveConfigBtn').addEventListener('click', saveConfig);
     $('#loadConfigBtn').addEventListener('click', triggerLoadConfig);
+  }
+
+  function initTabs() {
+    const tabsEl = document.getElementById('tabs');
+    const form = document.getElementById('params-form');
+    if (!tabsEl || !form) return;
+    const tabs = Array.from(tabsEl.querySelectorAll('.tab'));
+    const sections = Array.from(form.querySelectorAll('.section'));
+    const setActive = (name) => {
+      tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+      if (name === 'All') {
+        sections.forEach((s) => s.classList.remove('hidden'));
+      } else {
+        sections.forEach((s) => s.classList.toggle('hidden', s.dataset.section !== name));
+      }
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => setActive(t.dataset.tab)));
+    // Default tab: General
+    setActive('General');
   }
 
   // --- Save/Load Config ---
@@ -790,7 +908,9 @@ scaled_palm();
   }
 
   function readParameters() {
-    return {
+    const overrides = state.configOverrides || {};
+    const params = {
+      overall_scale: readSliderValue('overall_scale'),
       palm_width: readSliderValue('palm_width'),
       palm_length: readSliderValue('palm_length'),
       finger_length_index: readSliderValue('finger_length_index'),
@@ -798,6 +918,9 @@ scaled_palm();
       finger_length_ring: readSliderValue('finger_length_ring'),
       finger_length_pinky: readSliderValue('finger_length_pinky'),
       joint_clearance: readSliderValue('joint_clearance'),
+      thumb_length: readSliderValue('thumb_length'),
+      thumb_angle: readSliderValue('thumb_angle'),
+      thumb_clearance: readSliderValue('thumb_clearance'),
       mirrored: !!document.getElementById('mirrored').checked,
       serial_line1: String(document.getElementById('serial_line1').value || '').slice(0, 15),
       serial_line2: String(document.getElementById('serial_line2').value || '').slice(0, 15),
@@ -813,6 +936,22 @@ scaled_palm();
       string_channel_scale: readSliderValue('string_channel_scale'),
       elastic_channel_scale: readSliderValue('elastic_channel_scale'),
     };
+
+    // Fingerator (non-UI) parameters with sensible defaults, overridable via loaded config
+    params.global_scale = (overrides.global_scale != null) ? Number(overrides.global_scale) : params.overall_scale;
+    params.nominal_clearance = (overrides.nominal_clearance != null) ? Number(overrides.nominal_clearance) : params.joint_clearance;
+    params.bearing_pocket_diameter = (overrides.bearing_pocket_diameter != null) ? Number(overrides.bearing_pocket_diameter) : 0;
+    params.bearing_pocket_depth = (overrides.bearing_pocket_depth != null) ? Number(overrides.bearing_pocket_depth) : 0.4;
+    params.pin_index = (overrides.pin_index != null) ? Number(overrides.pin_index) : 1;
+    params.pin_diameter_clearance = (overrides.pin_diameter_clearance != null) ? Number(overrides.pin_diameter_clearance) : 0;
+    params.pins_for_string = (overrides.pins_for_string != null) ? !!overrides.pins_for_string : false;
+    params.print_finger_phalanx = (overrides.print_finger_phalanx != null) ? !!overrides.print_finger_phalanx : true;
+    params.print_long_fingers = (overrides.print_long_fingers != null) ? !!overrides.print_long_fingers : true;
+    params.print_short_fingers = (overrides.print_short_fingers != null) ? !!overrides.print_short_fingers : true;
+    params.print_thumb = (overrides.print_thumb != null) ? !!overrides.print_thumb : true;
+    params.print_thumb_phalanx = (overrides.print_thumb_phalanx != null) ? !!overrides.print_thumb_phalanx : true;
+
+    return params;
   }
 
   function setSliderValue(id, value) {
@@ -859,6 +998,7 @@ scaled_palm();
 
   function applyConfig(cfg) {
     const sliderKeys = [
+      'overall_scale',
       'palm_width',
       'palm_length',
       'finger_length_index',
@@ -866,6 +1006,9 @@ scaled_palm();
       'finger_length_ring',
       'finger_length_pinky',
       'joint_clearance',
+      'thumb_length',
+      'thumb_angle',
+      'thumb_clearance',
       'pivot_extra_clearance',
       'string_channel_scale',
       'elastic_channel_scale',
@@ -901,6 +1044,26 @@ scaled_palm();
     if (cfg.pivot_size !== undefined) {
       const el = document.getElementById('pivot_size');
       if (el) el.value = String(cfg.pivot_size);
+    }
+
+    // Non-UI fingerator overrides
+    const nonUiKeys = [
+      'global_scale',
+      'nominal_clearance',
+      'bearing_pocket_diameter',
+      'bearing_pocket_depth',
+      'pin_index',
+      'pin_diameter_clearance',
+      'pins_for_string',
+      'print_finger_phalanx',
+      'print_long_fingers',
+      'print_short_fingers',
+      'print_thumb',
+      'print_thumb_phalanx',
+    ];
+    state.configOverrides = state.configOverrides || {};
+    for (const k of nonUiKeys) {
+      if (cfg[k] !== undefined) state.configOverrides[k] = cfg[k];
     }
   }
 

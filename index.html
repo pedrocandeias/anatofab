@@ -22,139 +22,184 @@
 
     <main class="app-main">
       <aside class="sidebar" id="sidebar">
+        <div class="tabs" id="tabs">
+          <button type="button" class="tab" data-tab="All">All</button>
+          <button type="button" class="tab active" data-tab="General">General</button>
+          <button type="button" class="tab" data-tab="Palm">Palm</button>
+          <button type="button" class="tab" data-tab="Fingers">Fingers</button>
+          <button type="button" class="tab" data-tab="Thumb">Thumb</button>
+          <button type="button" class="tab" data-tab="Wrist">Wrist/Socket</button>
+          <button type="button" class="tab" data-tab="Channels">Channels</button>
+        </div>
         <form id="params-form">
-          <div class="param-group">
-            <label for="palm_width">Palm Width (mm)</label>
-            <div class="param-input">
-              <input type="range" id="palm_width" name="palm_width" min="50" max="90" step="1" value="70" />
-              <span class="val" id="palm_width_val">70</span>
+          <section class="section" data-section="General">
+            <h3>General</h3>
+            <div class="param-group">
+              <label for="overall_scale">Overall Scale</label>
+              <div class="param-input">
+                <input type="range" id="overall_scale" name="overall_scale" min="1.0" max="1.6" step="0.01" value="1.25" />
+                <span class="val" id="overall_scale_val">1.25</span>
+              </div>
             </div>
-          </div>
-
-          <div class="param-group">
-            <label for="palm_length">Palm Length (mm)</label>
-            <div class="param-input">
-              <input type="range" id="palm_length" name="palm_length" min="80" max="120" step="1" value="100" />
-              <span class="val" id="palm_length_val">100</span>
+            <div class="param-group">
+              <label>
+                <input type="checkbox" id="mirrored" />
+                Mirrored (Right-hand)
+              </label>
             </div>
-          </div>
-
-          <div class="param-group">
-            <label for="finger_length_index">Finger Length — Index (mm)</label>
-            <div class="param-input">
-              <input type="range" id="finger_length_index" name="finger_length_index" min="60" max="90" step="1" value="70" />
-              <span class="val" id="finger_length_index_val">70</span>
+            <div class="param-group">
+              <label for="serial_line1">Serial Line 1</label>
+              <input type="text" id="serial_line1" maxlength="15" placeholder="" value="" />
             </div>
-          </div>
-
-          <div class="param-group">
-            <label for="finger_length_middle">Finger Length — Middle (mm)</label>
-            <div class="param-input">
-              <input type="range" id="finger_length_middle" name="finger_length_middle" min="65" max="95" step="1" value="75" />
-              <span class="val" id="finger_length_middle_val">75</span>
+            <div class="param-group">
+              <label for="serial_line2">Serial Line 2</label>
+              <input type="text" id="serial_line2" maxlength="15" placeholder="" value="" />
             </div>
-          </div>
-
-          <div class="param-group">
-            <label for="finger_length_ring">Finger Length — Ring (mm)</label>
-            <div class="param-input">
-              <input type="range" id="finger_length_ring" name="finger_length_ring" min="60" max="90" step="1" value="72" />
-              <span class="val" id="finger_length_ring_val">72</span>
+            <div class="param-group">
+              <label for="serial_line3">Serial Line 3</label>
+              <input type="text" id="serial_line3" maxlength="15" placeholder="" value="" />
             </div>
-          </div>
-
-          <div class="param-group">
-            <label for="finger_length_pinky">Finger Length — Pinky (mm)</label>
-            <div class="param-input">
-              <input type="range" id="finger_length_pinky" name="finger_length_pinky" min="55" max="80" step="1" value="65" />
-              <span class="val" id="finger_length_pinky_val">65</span>
+            <div class="param-group">
+              <label><input type="checkbox" id="include_mesh" checked /> Include Mesh</label>
             </div>
-          </div>
-
-          <div class="param-group">
-            <label for="joint_clearance">Joint Clearance (mm)</label>
-            <div class="param-input">
-              <input type="range" id="joint_clearance" name="joint_clearance" min="0.2" max="1.0" step="0.1" value="0.5" />
-              <span class="val" id="joint_clearance_val">0.5</span>
+            <div class="param-group">
+              <label><input type="checkbox" id="include_knuckle_covers" checked /> Include Knuckle Covers</label>
             </div>
-          </div>
+          </section>
 
-          <!-- Header parameters for palm + fingerator build -->
-          <div class="param-group">
-            <label>
-              <input type="checkbox" id="mirrored" />
-              Mirrored
-            </label>
-          </div>
-
-          <div class="param-group">
-            <label for="serial_line1">Serial Line 1</label>
-            <input type="text" id="serial_line1" maxlength="15" placeholder="Pedro" value="Pedro" />
-          </div>
-          <div class="param-group">
-            <label for="serial_line2">Serial Line 2</label>
-            <input type="text" id="serial_line2" maxlength="15" placeholder="TestHand" value="TestHand" />
-          </div>
-          <div class="param-group">
-            <label for="serial_line3">Serial Line 3</label>
-            <input type="text" id="serial_line3" maxlength="15" placeholder="YYYY-MM-DD" value="" />
-          </div>
-
-          <div class="param-group">
-            <label>
-              <input type="checkbox" id="include_wrist_stamping_die" checked />
-              Include Wrist Stamping Die
-            </label>
-          </div>
-
-          <div class="param-group">
-            <label for="pivot_size">Pivot Size (mm)</label>
-            <select id="pivot_size">
-              <option value="1.5">1.5</option>
-              <option value="1.5875" selected>1.5875</option>
-              <option value="3.0">3.0</option>
-            </select>
-          </div>
-
-          <div class="param-group">
-            <label for="pivot_extra_clearance">Pivot Extra Clearance (mm)</label>
-            <div class="param-input">
-              <input type="range" id="pivot_extra_clearance" min="-0.5" max="0.5" step="0.01" value="0.0" />
-              <span class="val" id="pivot_extra_clearance_val">0.00</span>
+          <section class="section" data-section="Palm">
+            <h3>Palm</h3>
+            <div class="param-group">
+              <label>
+                <input type="checkbox" id="include_wrist_stamping_die" checked />
+                Include Wrist Stamping Die
+              </label>
             </div>
-          </div>
-
-          <div class="param-group">
-            <label><input type="checkbox" id="pins" checked /> Pins</label>
-          </div>
-          <div class="param-group">
-            <label><input type="checkbox" id="plugs" checked /> Plugs</label>
-          </div>
-          <div class="param-group">
-            <label><input type="checkbox" id="include_mesh" checked /> Include Mesh</label>
-          </div>
-          <div class="param-group">
-            <label><input type="checkbox" id="include_knuckle_covers" checked /> Include Knuckle Covers</label>
-          </div>
-          <div class="param-group">
-            <label><input type="checkbox" id="old_style_wrist" /> Old Style Wrist</label>
-          </div>
-
-          <div class="param-group">
-            <label for="string_channel_scale">String Channel Scale</label>
-            <div class="param-input">
-              <input type="range" id="string_channel_scale" min="0.5" max="1.0" step="0.05" value="0.9" />
-              <span class="val" id="string_channel_scale_val">0.90</span>
+            <div class="param-group">
+              <label for="palm_width">Palm Width (mm)</label>
+              <div class="param-input">
+                <input type="range" id="palm_width" name="palm_width" min="50" max="90" step="1" value="70" />
+                <span class="val" id="palm_width_val">70</span>
+              </div>
             </div>
-          </div>
-          <div class="param-group">
-            <label for="elastic_channel_scale">Elastic Channel Scale</label>
-            <div class="param-input">
-              <input type="range" id="elastic_channel_scale" min="0.5" max="1.5" step="0.05" value="0.9" />
-              <span class="val" id="elastic_channel_scale_val">0.90</span>
+            <div class="param-group">
+              <label for="palm_length">Palm Length (mm)</label>
+              <div class="param-input">
+                <input type="range" id="palm_length" name="palm_length" min="80" max="120" step="1" value="100" />
+                <span class="val" id="palm_length_val">100</span>
+              </div>
             </div>
-          </div>
+          </section>
 
+          <section class="section" data-section="Fingers">
+            <h3>Fingers</h3>
+            <div class="param-group">
+              <label for="finger_length_index">Finger Length — Index (mm)</label>
+              <div class="param-input">
+                <input type="range" id="finger_length_index" name="finger_length_index" min="60" max="90" step="1" value="70" />
+                <span class="val" id="finger_length_index_val">70</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="finger_length_middle">Finger Length — Middle (mm)</label>
+              <div class="param-input">
+                <input type="range" id="finger_length_middle" name="finger_length_middle" min="65" max="95" step="1" value="75" />
+                <span class="val" id="finger_length_middle_val">75</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="finger_length_ring">Finger Length — Ring (mm)</label>
+              <div class="param-input">
+                <input type="range" id="finger_length_ring" name="finger_length_ring" min="60" max="90" step="1" value="72" />
+                <span class="val" id="finger_length_ring_val">72</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="finger_length_pinky">Finger Length — Pinky (mm)</label>
+              <div class="param-input">
+                <input type="range" id="finger_length_pinky" name="finger_length_pinky" min="55" max="80" step="1" value="65" />
+                <span class="val" id="finger_length_pinky_val">65</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="joint_clearance">Joint Clearance (mm)</label>
+              <div class="param-input">
+                <input type="range" id="joint_clearance" name="joint_clearance" min="0.2" max="1.0" step="0.1" value="0.5" />
+                <span class="val" id="joint_clearance_val">0.5</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" data-section="Thumb">
+            <h3>Thumb</h3>
+            <div class="param-group">
+              <label for="thumb_length">Thumb Length (mm)</label>
+              <div class="param-input">
+                <input type="range" id="thumb_length" name="thumb_length" min="50" max="90" step="1" value="65" />
+                <span class="val" id="thumb_length_val">65</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="thumb_angle">Thumb Angle (deg)</label>
+              <div class="param-input">
+                <input type="range" id="thumb_angle" name="thumb_angle" min="0" max="90" step="1" value="45" />
+                <span class="val" id="thumb_angle_val">45</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="thumb_clearance">Thumb Clearance (mm)</label>
+              <div class="param-input">
+                <input type="range" id="thumb_clearance" name="thumb_clearance" min="0.2" max="1.0" step="0.1" value="0.5" />
+                <span class="val" id="thumb_clearance_val">0.5</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" data-section="Wrist">
+            <h3>Wrist / Socket</h3>
+            <div class="param-group">
+              <label for="pivot_size">Pivot Size (mm)</label>
+              <select id="pivot_size">
+                <option value="1.5">1.5</option>
+                <option value="1.5875" selected>1.5875</option>
+                <option value="3.0">3.0</option>
+              </select>
+            </div>
+            <div class="param-group">
+              <label for="pivot_extra_clearance">Pivot Extra Clearance (mm)</label>
+              <div class="param-input">
+                <input type="range" id="pivot_extra_clearance" min="-0.5" max="0.5" step="0.01" value="0.0" />
+                <span class="val" id="pivot_extra_clearance_val">0.00</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label><input type="checkbox" id="pins" checked /> Pins</label>
+            </div>
+            <div class="param-group">
+              <label><input type="checkbox" id="plugs" checked /> Plugs</label>
+            </div>
+            <div class="param-group">
+              <label><input type="checkbox" id="old_style_wrist" /> Old Style Wrist</label>
+            </div>
+          </section>
+
+          <section class="section" data-section="Channels">
+            <h3>Channels</h3>
+            <div class="param-group">
+              <label for="string_channel_scale">String Channel Scale</label>
+              <div class="param-input">
+                <input type="range" id="string_channel_scale" min="0.5" max="1.0" step="0.05" value="0.9" />
+                <span class="val" id="string_channel_scale_val">0.90</span>
+              </div>
+            </div>
+            <div class="param-group">
+              <label for="elastic_channel_scale">Elastic Channel Scale</label>
+              <div class="param-input">
+                <input type="range" id="elastic_channel_scale" min="0.5" max="1.5" step="0.05" value="0.9" />
+                <span class="val" id="elastic_channel_scale_val">0.90</span>
+              </div>
+            </div>
+          </section>
         </form>
 
         <div class="buttons">
