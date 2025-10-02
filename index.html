@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flexible Flyer Configurator</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23151923'/%3E%3Cpath d='M14 44 L32 12 L50 44 Z' fill='%2358a6ff'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.156.1/build/three.module.js",
+          "three/": "https://cdn.jsdelivr.net/npm/three@0.156.1/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Flexible Flyer — Prosthetic Hand Configurator</h1>
+    </header>
+
+    <main class="app-main">
+      <aside class="sidebar" id="sidebar">
+        <form id="params-form">
+          <div class="param-group">
+            <label for="palm_width">Palm Width (mm)</label>
+            <div class="param-input">
+              <input type="range" id="palm_width" name="palm_width" min="50" max="90" step="1" value="70" />
+              <span class="val" id="palm_width_val">70</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label for="palm_length">Palm Length (mm)</label>
+            <div class="param-input">
+              <input type="range" id="palm_length" name="palm_length" min="80" max="120" step="1" value="100" />
+              <span class="val" id="palm_length_val">100</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label for="finger_length_index">Finger Length — Index (mm)</label>
+            <div class="param-input">
+              <input type="range" id="finger_length_index" name="finger_length_index" min="60" max="90" step="1" value="70" />
+              <span class="val" id="finger_length_index_val">70</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label for="finger_length_middle">Finger Length — Middle (mm)</label>
+            <div class="param-input">
+              <input type="range" id="finger_length_middle" name="finger_length_middle" min="65" max="95" step="1" value="75" />
+              <span class="val" id="finger_length_middle_val">75</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label for="finger_length_ring">Finger Length — Ring (mm)</label>
+            <div class="param-input">
+              <input type="range" id="finger_length_ring" name="finger_length_ring" min="60" max="90" step="1" value="72" />
+              <span class="val" id="finger_length_ring_val">72</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label for="finger_length_pinky">Finger Length — Pinky (mm)</label>
+            <div class="param-input">
+              <input type="range" id="finger_length_pinky" name="finger_length_pinky" min="55" max="80" step="1" value="65" />
+              <span class="val" id="finger_length_pinky_val">65</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label for="joint_clearance">Joint Clearance (mm)</label>
+            <div class="param-input">
+              <input type="range" id="joint_clearance" name="joint_clearance" min="0.2" max="1.0" step="0.1" value="0.5" />
+              <span class="val" id="joint_clearance_val">0.5</span>
+            </div>
+          </div>
+
+          <!-- Header parameters for palm + fingerator build -->
+          <div class="param-group">
+            <label>
+              <input type="checkbox" id="mirrored" />
+              Mirrored
+            </label>
+          </div>
+
+          <div class="param-group">
+            <label for="serial_line1">Serial Line 1</label>
+            <input type="text" id="serial_line1" maxlength="15" placeholder="Pedro" value="Pedro" />
+          </div>
+          <div class="param-group">
+            <label for="serial_line2">Serial Line 2</label>
+            <input type="text" id="serial_line2" maxlength="15" placeholder="TestHand" value="TestHand" />
+          </div>
+          <div class="param-group">
+            <label for="serial_line3">Serial Line 3</label>
+            <input type="text" id="serial_line3" maxlength="15" placeholder="YYYY-MM-DD" value="" />
+          </div>
+
+          <div class="param-group">
+            <label>
+              <input type="checkbox" id="include_wrist_stamping_die" checked />
+              Include Wrist Stamping Die
+            </label>
+          </div>
+
+          <div class="param-group">
+            <label for="pivot_size">Pivot Size (mm)</label>
+            <select id="pivot_size">
+              <option value="1.5">1.5</option>
+              <option value="1.5875" selected>1.5875</option>
+              <option value="3.0">3.0</option>
+            </select>
+          </div>
+
+          <div class="param-group">
+            <label for="pivot_extra_clearance">Pivot Extra Clearance (mm)</label>
+            <div class="param-input">
+              <input type="range" id="pivot_extra_clearance" min="-0.5" max="0.5" step="0.01" value="0.0" />
+              <span class="val" id="pivot_extra_clearance_val">0.00</span>
+            </div>
+          </div>
+
+          <div class="param-group">
+            <label><input type="checkbox" id="pins" checked /> Pins</label>
+          </div>
+          <div class="param-group">
+            <label><input type="checkbox" id="plugs" checked /> Plugs</label>
+          </div>
+          <div class="param-group">
+            <label><input type="checkbox" id="include_mesh" checked /> Include Mesh</label>
+          </div>
+          <div class="param-group">
+            <label><input type="checkbox" id="include_knuckle_covers" checked /> Include Knuckle Covers</label>
+          </div>
+          <div class="param-group">
+            <label><input type="checkbox" id="old_style_wrist" /> Old Style Wrist</label>
+          </div>
+
+          <div class="param-group">
+            <label for="string_channel_scale">String Channel Scale</label>
+            <div class="param-input">
+              <input type="range" id="string_channel_scale" min="0.5" max="1.0" step="0.05" value="0.9" />
+              <span class="val" id="string_channel_scale_val">0.90</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label for="elastic_channel_scale">Elastic Channel Scale</label>
+            <div class="param-input">
+              <input type="range" id="elastic_channel_scale" min="0.5" max="1.5" step="0.05" value="0.9" />
+              <span class="val" id="elastic_channel_scale_val">0.90</span>
+            </div>
+          </div>
+
+        </form>
+
+        <div class="buttons">
+          <button type="button" id="updateBtn">Update Model</button>
+          <button type="button" id="saveConfigBtn">Save Config</button>
+          <button type="button" id="loadConfigBtn">Load Config</button>
+          <button type="button" id="exportStlBtn">Export STL</button>
+          <button type="button" id="exportStepBtn">Export STEP</button>
+        </div>
+
+        <div class="status">
+          <div id="status-text">Ready.</div>
+        </div>
+      </aside>
+
+      <section class="viewport" id="viewport"></section>
+    </main>
+
+    <footer class="app-footer">
+      <small>
+        Three.js is loaded via CDN. OpenSCAD WASM will be integrated in Step 3.
+      </small>
+    </footer>
+
+    <!-- App logic as ES module (imports Three.js + OrbitControls) -->
+    <script type="module" src="app.js"></script>
+  </body>
+  </html>
