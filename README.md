@@ -1,4 +1,4 @@
-# Flexible Flyer Prosthetic Hand Configurator
+# Prosthetic Hand Configurator
 
 This repository hosts a browser-based configurator for the Flexible Flyer prosthetic hand. The app loads OpenSCAD sources in the browser (via openscad-wasm) and renders STL previews with Three.js. You can tweak parameters, preview the results, and export printable meshes without leaving the browser.
 
