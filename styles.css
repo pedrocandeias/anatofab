@@ -85,7 +85,7 @@ html, body {
 .sidebar #params-form {
   overflow: auto;
   padding-right: 4px;
-  flex: 1;
+
 }
 
 .section.hidden {

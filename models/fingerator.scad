@@ -31,6 +31,8 @@ Marcus Mendenhall, 5 June, 2020, Germantown, Maryland, USA
 
 */
 
+fingerator_auto_run = is_undef(fingerator_auto_run) ? true : fingerator_auto_run;
+
 // size of fingers. should match scale of hand they are being printed for.
 global_scale=1.25; // [1.0:0.01:2.0]
 // Clearance on sides of tabs.  increase for looser fit. This only affects the phalanges, so a bad fit does not require reprinting  anything else.
@@ -283,35 +285,37 @@ module cut_phalanx(tab_thickness=5.5, palm_pivot_size=3, knuckle_pivot_size=3, s
 
 
 // finger phalanx, may use different attachment to palm and knuckle, two separate sizes.
-if(print_finger_phalanx) translate([0,0,0]) cut_phalanx(
-    palm_pivot_size=pivot_dia, knuckle_pivot_size=pivot_dia,
-    tab_thickness=adjusted_tabwidth, scale_size=global_scale, thumb=false);
-// thumb phalanx
-if(print_thumb_phalanx) translate([30,0,0]) scale([1.1,1,1]) cut_phalanx(
-    palm_pivot_size=pivot_dia, knuckle_pivot_size=pivot_dia,
-    tab_thickness=adjusted_tabwidth/1.1, scale_size=global_scale, thumb=true);
+if(fingerator_auto_run) {
+    if(print_finger_phalanx) translate([0,0,0]) cut_phalanx(
+        palm_pivot_size=pivot_dia, knuckle_pivot_size=pivot_dia,
+        tab_thickness=adjusted_tabwidth, scale_size=global_scale, thumb=false);
+    // thumb phalanx
+    if(print_thumb_phalanx) translate([30,0,0]) scale([1.1,1,1]) cut_phalanx(
+        palm_pivot_size=pivot_dia, knuckle_pivot_size=pivot_dia,
+        tab_thickness=adjusted_tabwidth/1.1, scale_size=global_scale, thumb=true);
 
-//long fingertip, keep tolerances the same with scaling using width correction
-if(screws && print_long_fingers) translate([-25,0,0]) adjusted_bolt_holes(global_scale, outer_width=13, 
-    offsets=[[[0,-20,9],0],], bolt_dia=pivot_pin_dia, 
-    nut_size=nut_size, bolt_head_dia=bolt_head_dia) 
-        finger(slotwidth=nominal_slotwidth, thumb=false);
-else if (print_long_fingers) translate([-25,0,0]) adjusted_holes(global_scale, 
-    offsets=[[[0,-20,9],0],], dia=pivot_pin_dia)  
-        finger(slotwidth=nominal_slotwidth, thumb=false);
-//short fingertip
-if(screws && print_short_fingers) translate([-50,0,0]) adjusted_bolt_holes(global_scale, outer_width=13, 
-    offsets=[[[0,-20*0.9,9],0],], bolt_dia=pivot_pin_dia, 
-    nut_size=nut_size, bolt_head_dia=bolt_head_dia) scale([1,0.9,1])  
-        finger(slotwidth=nominal_slotwidth, thumb=false);
-else if (print_short_fingers) translate([-50,0,0]) adjusted_holes(global_scale, 
-    offsets=[[[0,-20*0.9,9],0],], dia=pivot_pin_dia) scale([1,0.9,1])  
-        finger(slotwidth=nominal_slotwidth, thumb=false);
-// thumb by scaling regular fingers tips
-if(screws && print_thumb) translate([60,0,0]) adjusted_bolt_holes(global_scale, outer_width=13, 
-    offsets=[[[0,-20*0.77,9*0.72],0],], bolt_dia=pivot_pin_dia, 
-    nut_size=nut_size, bolt_head_dia=bolt_head_dia) scale([1.1,0.77,0.72])  
-        finger(slotwidth=nominal_slotwidth/1.1, thumb=true);
-else if(print_thumb) translate([60,0,0]) adjusted_holes(global_scale, 
-    offsets=[[[0,-20*0.77,9*0.72],0],], dia=pivot_pin_dia) scale([1.1,0.77,0.72]) 
-        finger(slotwidth=nominal_slotwidth/1.1, thumb=true);
+    //long fingertip, keep tolerances the same with scaling using width correction
+    if(screws && print_long_fingers) translate([-25,0,0]) adjusted_bolt_holes(global_scale, outer_width=13, 
+        offsets=[[[0,-20,9],0],], bolt_dia=pivot_pin_dia, 
+        nut_size=nut_size, bolt_head_dia=bolt_head_dia) 
+            finger(slotwidth=nominal_slotwidth, thumb=false);
+    else if (print_long_fingers) translate([-25,0,0]) adjusted_holes(global_scale, 
+        offsets=[[[0,-20,9],0],], dia=pivot_pin_dia)  
+            finger(slotwidth=nominal_slotwidth, thumb=false);
+    //short fingertip
+    if(screws && print_short_fingers) translate([-50,0,0]) adjusted_bolt_holes(global_scale, outer_width=13, 
+        offsets=[[[0,-20*0.9,9],0],], bolt_dia=pivot_pin_dia, 
+        nut_size=nut_size, bolt_head_dia=bolt_head_dia) scale([1,0.9,1])  
+            finger(slotwidth=nominal_slotwidth, thumb=false);
+    else if (print_short_fingers) translate([-50,0,0]) adjusted_holes(global_scale, 
+        offsets=[[[0,-20*0.9,9],0],], dia=pivot_pin_dia) scale([1,0.9,1])  
+            finger(slotwidth=nominal_slotwidth, thumb=false);
+    // thumb by scaling regular fingers tips
+    if(screws && print_thumb) translate([60,0,0]) adjusted_bolt_holes(global_scale, outer_width=13, 
+        offsets=[[[0,-20*0.77,9*0.72],0],], bolt_dia=pivot_pin_dia, 
+        nut_size=nut_size, bolt_head_dia=bolt_head_dia) scale([1.1,0.77,0.72])  
+            finger(slotwidth=nominal_slotwidth/1.1, thumb=true);
+    else if(print_thumb) translate([60,0,0]) adjusted_holes(global_scale, 
+        offsets=[[[0,-20*0.77,9*0.72],0],], dia=pivot_pin_dia) scale([1.1,0.77,0.72]) 
+            finger(slotwidth=nominal_slotwidth/1.1, thumb=true);
+}

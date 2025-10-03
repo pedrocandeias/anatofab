@@ -1,4 +1,5 @@
 inch=25.4*1; // hidden from customizer by equation, useful for pins
+palm_auto_run = is_undef(palm_auto_run) ? true : palm_auto_run;
 /* [Main setup] */
 // size of hand relative to tiny 100% model
 overall_scale=1.25; // [1.0:0.01:2.0]
@@ -477,29 +478,31 @@ module scaled_palm()
         %import("palm_left_v2_nobox.stl", convexity=10);
 }
  
-scaled_palm();
+if(palm_auto_run) {
+    scaled_palm();
 
-if(include_wrist_stamping_die) scale(overall_scale) {  $fn=50; 
-    translate(mirrored?[20,-50,4.99/2]:[5,-50,4.99/2]) difference() {
-        rotate([0,-90,0]) difference() {
-            scale([1,2.5,2.5]) m3_wrist_plug();
-            intersection() {
+    if(include_wrist_stamping_die) scale(overall_scale) {  $fn=50; 
+        translate(mirrored?[20,-50,4.99/2]:[5,-50,4.99/2]) difference() {
+            rotate([0,-90,0]) difference() {
+                scale([1,2.5,2.5]) m3_wrist_plug();
+                intersection() {
+                        m3_wrist_drill();
+                        translate([5,0,0]) cube([10,20,20], center=true);
+                    }
+                }
+            cylinder(d=3.6/overall_scale, h=50, center=true, $fn=20);  // drilling guide hole
+        }       
+        translate(mirrored?[-6,-50,4.99/2]:[-21,-50,4.99/2]) difference() {
+            rotate([0,90,0]) union() {
+                scale([1,2.5,2.5]) m3_wrist_plug();
+                translate([-5.1+0.5,0,0]) intersection() {
                     m3_wrist_drill();
-                    translate([5,0,0]) cube([10,20,20], center=true);
+                    translate([2.5,0,0]) cube([4,20,20], center=true);
                 }
             }
-        cylinder(d=3.6/overall_scale, h=50, center=true, $fn=20);  // drilling guide hole
-    }       
-    translate(mirrored?[-6,-50,4.99/2]:[-21,-50,4.99/2]) difference() {
-        rotate([0,90,0]) union() {
-            scale([1,2.5,2.5]) m3_wrist_plug();
-            translate([-5.1+0.5,0,0]) intersection() {
-                m3_wrist_drill();
-                translate([2.5,0,0]) cube([4,20,20], center=true);
-            }
+            cylinder(d=3.6/overall_scale, h=50, center=true, $fn=20); // drilling guide hole
+            translate([0,3,-4.99/2-0.01]) linear_extrude(slices=1, height=0.5) 
+                scale([-1,1]) text(str(overall_scale*100), size=4, halign="center");
         }
-        cylinder(d=3.6/overall_scale, h=50, center=true, $fn=20); // drilling guide hole
-        translate([0,3,-4.99/2-0.01]) linear_extrude(slices=1, height=0.5) 
-            scale([-1,1]) text(str(overall_scale*100), size=4, halign="center");
     }
 }

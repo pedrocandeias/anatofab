@@ -23,6 +23,7 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
       modelsLoaded: false,
     },
     configOverrides: {},
+    activeTab: 'All',
   };
 
   function $(sel) {
@@ -513,86 +514,304 @@ import { OrbitControls as OrbitControlsClass } from 'three/examples/jsm/controls
     return '"' + v.replace(/"/g, '\\"').slice(0, 15) + '"';
   }
 
-  function buildPalmScadFromParameters(p) {
-    const overall_scale = (Number.isFinite(p.overall_scale) ? p.overall_scale : 1.25).toFixed(4);
-    const mirrored = !!p.mirrored;
-    const serial_line1 = scadStringLiteral(p.serial_line1, '');
-    const serial_line2 = scadStringLiteral(p.serial_line2, '');
-    const serial_line3 = scadStringLiteral(p.serial_line3, '');
-    const include_wrist_stamping_die = p.include_wrist_stamping_die !== undefined ? !!p.include_wrist_stamping_die : true;
-    const pivot_size = (Number(p.pivot_size) || 1.5875);
-    const pivot_extra_clearance = Number.isFinite(p.pivot_extra_clearance) ? p.pivot_extra_clearance : 0.0;
-    const pins = p.pins !== undefined ? !!p.pins : true;
-    const plugs = p.plugs !== undefined ? !!p.plugs : true;
-    const include_mesh = p.include_mesh !== undefined ? (p.include_mesh ? 1 : 0) : 1;
-    const include_knuckle_covers = p.include_knuckle_covers !== undefined ? !!p.include_knuckle_covers : true;
-    const string_channel_scale = Number.isFinite(p.string_channel_scale) ? p.string_channel_scale : 0.9;
-    const elastic_channel_scale = Number.isFinite(p.elastic_channel_scale) ? p.elastic_channel_scale : 0.9;
-    const old_style_wrist = p.old_style_wrist !== undefined ? !!p.old_style_wrist : false;
-    const thumb_length = Number.isFinite(p.thumb_length) ? p.thumb_length : 65;
-    const thumb_angle = Number.isFinite(p.thumb_angle) ? p.thumb_angle : 45;
-    const thumb_clearance = Number.isFinite(p.thumb_clearance) ? p.thumb_clearance : 0.5;
+  function extractParameterValues(raw) {
+    const overallScale = Number.isFinite(raw.overall_scale) ? raw.overall_scale : 1.25;
+    const mirrored = !!raw.mirrored;
+    const serialLine1Literal = scadStringLiteral(raw.serial_line1, '');
+    const serialLine2Literal = scadStringLiteral(raw.serial_line2, '');
+    const serialLine3Literal = scadStringLiteral(raw.serial_line3, '');
+    const includeWristStampingDie = raw.include_wrist_stamping_die !== undefined ? !!raw.include_wrist_stamping_die : true;
+    const pivotSize = Number.isFinite(Number(raw.pivot_size)) ? Number(raw.pivot_size) : 1.5875;
+    const pivotExtraClearance = Number.isFinite(raw.pivot_extra_clearance) ? raw.pivot_extra_clearance : 0.0;
+    const pins = raw.pins !== undefined ? !!raw.pins : true;
+    const plugs = raw.plugs !== undefined ? !!raw.plugs : true;
+    const includeMesh = raw.include_mesh !== undefined ? (raw.include_mesh ? 1 : 0) : 1;
+    const includeKnuckleCovers = raw.include_knuckle_covers !== undefined ? !!raw.include_knuckle_covers : true;
+    const stringChannelScale = Number.isFinite(raw.string_channel_scale) ? raw.string_channel_scale : 0.9;
+    const elasticChannelScale = Number.isFinite(raw.elastic_channel_scale) ? raw.elastic_channel_scale : 0.9;
+    const oldStyleWrist = raw.old_style_wrist !== undefined ? !!raw.old_style_wrist : false;
+    const thumbLength = Number.isFinite(raw.thumb_length) ? raw.thumb_length : 65;
+    const thumbAngle = Number.isFinite(raw.thumb_angle) ? raw.thumb_angle : 45;
+    const thumbClearance = Number.isFinite(raw.thumb_clearance) ? raw.thumb_clearance : 0.5;
 
-    // Fingerator parameters
-    const global_scale = Number.isFinite(p.global_scale) ? p.global_scale : Number(overall_scale);
-    const nominal_clearance = Number.isFinite(p.nominal_clearance) ? p.nominal_clearance : 0.5;
-    const bearing_pocket_diameter = Number.isFinite(p.bearing_pocket_diameter) ? p.bearing_pocket_diameter : 0;
-    const bearing_pocket_depth = Number.isFinite(p.bearing_pocket_depth) ? p.bearing_pocket_depth : 0.4;
-    const pin_index = Number.isFinite(p.pin_index) ? p.pin_index : 1;
-    const pin_diameter_clearance = Number.isFinite(p.pin_diameter_clearance) ? p.pin_diameter_clearance : 0;
-    const pins_for_string = p.pins_for_string !== undefined ? !!p.pins_for_string : false;
-    const print_finger_phalanx = p.print_finger_phalanx !== undefined ? !!p.print_finger_phalanx : true;
-    const print_long_fingers = p.print_long_fingers !== undefined ? !!p.print_long_fingers : true;
-    const print_short_fingers = p.print_short_fingers !== undefined ? !!p.print_short_fingers : true;
-    const print_thumb = p.print_thumb !== undefined ? !!p.print_thumb : true;
-    const print_thumb_phalanx = p.print_thumb_phalanx !== undefined ? !!p.print_thumb_phalanx : true;
+    const globalScale = Number.isFinite(raw.global_scale) ? raw.global_scale : overallScale;
+    const nominalClearance = Number.isFinite(raw.nominal_clearance) ? raw.nominal_clearance : 0.5;
+    const bearingPocketDiameter = Number.isFinite(raw.bearing_pocket_diameter) ? raw.bearing_pocket_diameter : 0;
+    const bearingPocketDepth = Number.isFinite(raw.bearing_pocket_depth) ? raw.bearing_pocket_depth : 0.4;
+    const pinIndex = Number.isFinite(raw.pin_index) ? raw.pin_index : 1;
+    const pinDiameterClearance = Number.isFinite(raw.pin_diameter_clearance) ? raw.pin_diameter_clearance : 0;
+    const pinsForString = raw.pins_for_string !== undefined ? !!raw.pins_for_string : false;
+    const printFingerPhalanx = raw.print_finger_phalanx !== undefined ? !!raw.print_finger_phalanx : true;
+    const printLongFingers = raw.print_long_fingers !== undefined ? !!raw.print_long_fingers : true;
+    const printShortFingers = raw.print_short_fingers !== undefined ? !!raw.print_short_fingers : true;
+    const printThumb = raw.print_thumb !== undefined ? !!raw.print_thumb : true;
+    const printThumbPhalanx = raw.print_thumb_phalanx !== undefined ? !!raw.print_thumb_phalanx : true;
 
-    const header = `include <models/hand_wrapper.scad>;
+    return {
+      overallScale,
+      overallScaleLiteral: overallScale.toFixed(4),
+      mirrored,
+      serialLine1Literal,
+      serialLine2Literal,
+      serialLine3Literal,
+      includeWristStampingDie,
+      pivotSize,
+      pivotExtraClearance,
+      pins,
+      plugs,
+      includeMesh,
+      includeKnuckleCovers,
+      stringChannelScale,
+      elasticChannelScale,
+      oldStyleWrist,
+      thumbLength,
+      thumbAngle,
+      thumbClearance,
+      finger: {
+        globalScale,
+        nominalClearance,
+        bearingPocketDiameter,
+        bearingPocketDepth,
+        pinIndex,
+        pinDiameterClearance,
+        pinsForString,
+        printFingerPhalanx,
+        printLongFingers,
+        printShortFingers,
+        printThumb,
+        printThumbPhalanx,
+      },
+    };
+  }
 
-overall_scale = ${overall_scale};
-mirrored = ${mirrored};
-serial_line1 = ${serial_line1};
-serial_line2 = ${serial_line2};
-serial_line3 = ${serial_line3};
-include_wrist_stamping_die = ${include_wrist_stamping_die};
-pivot_size = ${pivot_size};
-pivot_extra_clearance = ${pivot_extra_clearance};
-pins = ${pins};
-plugs = ${plugs};
-include_mesh = ${include_mesh};
-include_knuckle_covers = ${include_knuckle_covers};
-string_channel_scale = ${string_channel_scale};
-elastic_channel_scale = ${elastic_channel_scale};
-old_style_wrist = ${old_style_wrist};
-thumb_length = ${thumb_length};
-thumb_angle = ${thumb_angle};
-thumb_clearance = ${thumb_clearance};
+  function formatScadValue(value) {
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) return '0';
+      return String(value);
+    }
+    return String(value);
+  }
 
-// fingerator parameters
-global_scale = ${global_scale};
-nominal_clearance = ${nominal_clearance};
-bearing_pocket_diameter = ${bearing_pocket_diameter};
-bearing_pocket_depth = ${bearing_pocket_depth};
-pin_index = ${pin_index};
-pin_diameter_clearance = ${pin_diameter_clearance};
-pins_for_string = ${pins_for_string};
-print_finger_phalanx = ${print_finger_phalanx};
-print_long_fingers = ${print_long_fingers};
-print_short_fingers = ${print_short_fingers};
-print_thumb = ${print_thumb};
-print_thumb_phalanx = ${print_thumb_phalanx};
+  function buildAssignmentString(params, overrides = {}) {
+    const base = {
+      overall_scale: params.overallScaleLiteral,
+      mirrored: params.mirrored,
+      serial_line1: params.serialLine1Literal,
+      serial_line2: params.serialLine2Literal,
+      serial_line3: params.serialLine3Literal,
+      include_wrist_stamping_die: params.includeWristStampingDie,
+      pivot_size: params.pivotSize,
+      pivot_extra_clearance: params.pivotExtraClearance,
+      pins: params.pins,
+      plugs: params.plugs,
+      include_mesh: params.includeMesh,
+      include_knuckle_covers: params.includeKnuckleCovers,
+      string_channel_scale: params.stringChannelScale,
+      elastic_channel_scale: params.elasticChannelScale,
+      old_style_wrist: params.oldStyleWrist,
+      thumb_length: params.thumbLength,
+      thumb_angle: params.thumbAngle,
+      thumb_clearance: params.thumbClearance,
+      global_scale: params.finger.globalScale,
+      nominal_clearance: params.finger.nominalClearance,
+      bearing_pocket_diameter: params.finger.bearingPocketDiameter,
+      bearing_pocket_depth: params.finger.bearingPocketDepth,
+      pin_index: params.finger.pinIndex,
+      pin_diameter_clearance: params.finger.pinDiameterClearance,
+      pins_for_string: params.finger.pinsForString,
+      print_finger_phalanx: params.finger.printFingerPhalanx,
+      print_long_fingers: params.finger.printLongFingers,
+      print_short_fingers: params.finger.printShortFingers,
+      print_thumb: params.finger.printThumb,
+      print_thumb_phalanx: params.finger.printThumbPhalanx,
+    };
+    const merged = { ...base, ...overrides };
+    const order = [
+      'overall_scale',
+      'mirrored',
+      'serial_line1',
+      'serial_line2',
+      'serial_line3',
+      'include_wrist_stamping_die',
+      'pivot_size',
+      'pivot_extra_clearance',
+      'pins',
+      'plugs',
+      'include_mesh',
+      'include_knuckle_covers',
+      'string_channel_scale',
+      'elastic_channel_scale',
+      'old_style_wrist',
+      'thumb_length',
+      'thumb_angle',
+      'thumb_clearance',
+      'global_scale',
+      'nominal_clearance',
+      'bearing_pocket_diameter',
+      'bearing_pocket_depth',
+      'pin_index',
+      'pin_diameter_clearance',
+      'pins_for_string',
+      'print_finger_phalanx',
+      'print_long_fingers',
+      'print_short_fingers',
+      'print_thumb',
+      'print_thumb_phalanx',
+    ];
+    return order
+      .filter((key) => key in merged)
+      .map((key) => `${key} = ${formatScadValue(merged[key])};`)
+      .join('\n');
+  }
+
+  function buildPalmSupplementBlock() {
+    return `if (include_wrist_stamping_die) scale(overall_scale) {  $fn=50;
+    translate(mirrored?[20,-50,4.99/2]:[5,-50,4.99/2]) difference() {
+        rotate([0,-90,0]) difference() {
+            scale([1,2.5,2.5]) m3_wrist_plug();
+            intersection() {
+                    m3_wrist_drill();
+                    translate([5,0,0]) cube([10,20,20], center=true);
+                }
+            }
+        cylinder(d=3.6/overall_scale, h=50, center=true, $fn=20);  // drilling guide hole
+    }
+    translate(mirrored?[-6,-50,4.99/2]:[-21,-50,4.99/2]) difference() {
+        rotate([0,90,0]) union() {
+            scale([1,2.5,2.5]) m3_wrist_plug();
+            translate([-5.1+0.5,0,0]) intersection() {
+                m3_wrist_drill();
+                translate([2.5,0,0]) cube([4,20,20], center=true);
+            }
+        }
+        cylinder(d=3.6/overall_scale, h=50, center=true, $fn=20); // drilling guide hole
+        translate([0,3,-4.99/2-0.01]) linear_extrude(slices=1, height=0.5)
+            scale([-1,1]) text(str(overall_scale*100), size=4, halign="center");
+    }
+}`;
+  }
+
+  function buildFingerDerivedValues() {
+    return `screws = (pin_index == 0);
+pivot_dia_3mm_screw = 25.4*(3/16)+0.25;
+pivot_pin_dia_3mm_screw = 3+0.1;
+pivot_dia_8th_delrin = 25.4*(1/8)+0.25;
+pivot_pin_dia_16th_pin = 25.4*(1/16)+pin_diameter_clearance;
+pivot_pin_dia_16th_pin_clearance = pivot_pin_dia_16th_pin+0.3;
+pivot_dia_13ga_nail = 25.4*(5/32)+0.25;
+pivot_pin_dia_13ga_nail = 25.4*0.095+pin_diameter_clearance;
+pivot_array=[pivot_dia_3mm_screw, pivot_dia_8th_delrin, pivot_dia_13ga_nail, pivot_pin_dia_16th_pin_clearance];
+pin_array=[pivot_pin_dia_3mm_screw, pivot_pin_dia_16th_pin, pivot_pin_dia_13ga_nail, pivot_pin_dia_16th_pin];
+pivot_size_index=pin_index;
+pivot_dia= pivot_array[pivot_size_index];
+pivot_pin_dia=pin_array[pivot_size_index];
+nut_size=5.5;
+bolt_head_dia=5.5+0.3;
+nominal_slotwidth=6+0;
+adjusted_tabwidth=nominal_slotwidth-nominal_clearance/global_scale;
+adjusted_slotwidth=nominal_slotwidth;
+initial_rotation=33.5+0;`;
+  }
+
+  const fingerGeometryBody = `if(print_finger_phalanx) translate([0,0,0]) cut_phalanx(
+    palm_pivot_size=pivot_dia, knuckle_pivot_size=pivot_dia,
+    tab_thickness=adjusted_tabwidth, scale_size=global_scale, thumb=false);
+if(print_thumb_phalanx) translate([30,0,0]) scale([1.1,1,1]) cut_phalanx(
+    palm_pivot_size=pivot_dia, knuckle_pivot_size=pivot_dia,
+    tab_thickness=adjusted_tabwidth/1.1, scale_size=global_scale, thumb=true);
+
+if(screws && print_long_fingers) translate([-25,0,0]) adjusted_bolt_holes(global_scale, outer_width=13,
+    offsets=[[[0,-20,9],0],], bolt_dia=pivot_pin_dia,
+    nut_size=nut_size, bolt_head_dia=bolt_head_dia)
+        finger(slotwidth=nominal_slotwidth, thumb=false);
+else if (print_long_fingers) translate([-25,0,0]) adjusted_holes(global_scale,
+    offsets=[[[0,-20,9],0],], dia=pivot_pin_dia)
+        finger(slotwidth=nominal_slotwidth, thumb=false);
+if(screws && print_short_fingers) translate([-50,0,0]) adjusted_bolt_holes(global_scale, outer_width=13,
+    offsets=[[[0,-20*0.9,9],0],], bolt_dia=pivot_pin_dia,
+    nut_size=nut_size, bolt_head_dia=bolt_head_dia) scale([1,0.9,1])
+        finger(slotwidth=nominal_slotwidth, thumb=false);
+else if (print_short_fingers) translate([-50,0,0]) adjusted_holes(global_scale,
+    offsets=[[[0,-20*0.9,9],0],], dia=pivot_pin_dia) scale([1,0.9,1])
+        finger(slotwidth=nominal_slotwidth, thumb=false);
+if(screws && print_thumb) translate([60,0,0]) adjusted_bolt_holes(global_scale, outer_width=13,
+    offsets=[[[0,-20*0.77,9*0.72],0],], bolt_dia=pivot_pin_dia,
+    nut_size=nut_size, bolt_head_dia=bolt_head_dia) scale([1.1,0.77,0.72])
+        finger(slotwidth=nominal_slotwidth/1.1, thumb=true);
+else if(print_thumb) translate([60,0,0]) adjusted_holes(global_scale,
+    offsets=[[[0,-20*0.77,9*0.72],0],], dia=pivot_pin_dia) scale([1.1,0.77,0.72])
+        finger(slotwidth=nominal_slotwidth/1.1, thumb=true);`;
+
+  function buildFingerScad(params, mode) {
+    const overrides = {};
+    if (mode === 'fingers') {
+      overrides.print_thumb = false;
+      overrides.print_thumb_phalanx = false;
+    } else if (mode === 'thumb') {
+      overrides.print_finger_phalanx = false;
+      overrides.print_long_fingers = false;
+      overrides.print_short_fingers = false;
+      overrides.print_thumb = true;
+      overrides.print_thumb_phalanx = true;
+    }
+    const assignments = buildAssignmentString(params, overrides);
+    return `fingerator_auto_run = false;
+include <models/fingerator.scad>;
+
+${assignments}
+
+${buildFingerDerivedValues()}
+
+${fingerGeometryBody}
+`;
+  }
+
+  function buildPalmScad(params) {
+    const assignments = buildAssignmentString(params);
+    return `palm_auto_run = false;
+include <models/paraglider_palm_left.scad>;
+
+${assignments}
+
+scaled_palm();
+${buildPalmSupplementBlock()}
+`;
+  }
+
+  function buildFullHandScad(params) {
+    const assignments = buildAssignmentString(params);
+    return `palm_auto_run = false;
+fingerator_auto_run = false;
+include <models/hand_wrapper.scad>;
+
+${assignments}
 
 scaled_hand();
+${buildPalmSupplementBlock()}
+
+${buildFingerDerivedValues()}
+
+${fingerGeometryBody}
 `;
-    return header;
+  }
+
+  function buildScadFromParameters(p, tabName) {
+    const params = extractParameterValues(p);
+    const tab = (tabName || 'All').toLowerCase();
+    if (tab === 'palm') return buildPalmScad(params);
+    if (tab === 'fingers') return buildFingerScad(params, 'fingers');
+    if (tab === 'thumb') return buildFingerScad(params, 'thumb');
+    return buildFullHandScad(params);
   }
 
   // --- Update Model: compile OpenSCAD and display ---
   function updateModel() {
     const parameters = readParameters();
     console.log('Parameters:', parameters);
-    const scad = buildPalmScadFromParameters(parameters);
-    setStatus('Compiling OpenSCAD…');
+    const activeTab = state.activeTab || 'All';
+    const scad = buildScadFromParameters(parameters, activeTab);
+    setStatus(`Compiling ${activeTab} model…`);
 
     ensureOpenSCADModule()
       .then((mod) => {
@@ -614,9 +833,9 @@ scaled_hand();
           } catch (e) {
             throw parseErr;
           }
-        }
-        replaceModelWithGeometry(geometry);
-        setStatus('Model updated.');
+      }
+       replaceModelWithGeometry(geometry);
+        setStatus(`${activeTab} model updated.`);
       })
       .catch((err) => {
         console.error('Compilation failed:', err);
@@ -630,7 +849,7 @@ scaled_hand();
         // Fallback: build a preview geometry so users still see updates
         const preview = buildPreviewGeometryFromParameters(parameters);
         replaceModelWithGeometry(preview);
-        setStatus('Preview updated (OpenSCAD not available).');
+        setStatus(`${activeTab} preview updated (OpenSCAD not available).`);
       });
   }
 
@@ -896,16 +1115,26 @@ scaled_hand();
     const tabs = Array.from(tabsEl.querySelectorAll('.tab'));
     const sections = Array.from(form.querySelectorAll('.section'));
     const setActive = (name) => {
+      state.activeTab = name;
       tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
       if (name === 'All') {
-        sections.forEach((s) => s.classList.remove('hidden'));
+        // In "All" view, hide all settings sections
+        sections.forEach((s) => s.classList.add('hidden'));
       } else {
+        // Otherwise, show only the selected section
         sections.forEach((s) => s.classList.toggle('hidden', s.dataset.section !== name));
       }
     };
-    tabs.forEach((t) => t.addEventListener('click', () => setActive(t.dataset.tab)));
-    // Default tab: General
-    setActive('General');
+    tabs.forEach((t) =>
+      t.addEventListener('click', () => {
+        const nextTab = t.dataset.tab;
+        if (!nextTab || state.activeTab === nextTab) return;
+        setActive(nextTab);
+        updateModel();
+      })
+    );
+    // Default tab: All
+    setActive('All');
   }
 
   // --- Save/Load Config ---
